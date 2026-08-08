@@ -357,6 +357,8 @@ fifty. Render those on a server and leave the rest alone.`,
 
 async function main() {
 	for (const template of templates) await ensureTemplate(template);
+	// The CLI (`npm create draftbase`) seeds schema only, so a new project starts empty.
+	if (process.env.SEED_TEMPLATES_ONLY) return;
 
 	for (const { modules, image, ...course } of courses) {
 		const cover = await uploadImage(image, `${course.slug}.jpg`, `${course.title} cover`);
