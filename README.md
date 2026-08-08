@@ -88,9 +88,9 @@ find nothing.
    content lives in an environment other than `production`.
 4. Push to `main`.
 
-If your repo isn't named `example-course`, update `basePath` in
-[`next.config.mjs`](next.config.mjs). On a custom domain, remove `basePath` and
-`trailingSlash`.
+This repo deploys to the custom domain in [`public/CNAME`](public/CNAME), so it sets no
+`basePath`. Forking to a project site (`<user>.github.io/<repo>`)? Delete `public/CNAME` and add
+`basePath: "/<repo>"` to [`next.config.mjs`](next.config.mjs).
 
 ### Rebuild when content is published
 
