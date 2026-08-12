@@ -12,8 +12,8 @@ if (!apiKey) {
 // which is what keeps the API key out of the browser bundle.
 const client = createClient({
 	apiKey,
-	baseUrl: process.env.DRAFTBASE_API_URL ?? "https://api.draftbase.co",
-	environment: process.env.DRAFTBASE_ENVIRONMENT ?? "production",
+	baseUrl: process.env.DRAFTBASE_API_URL || "https://api.draftbase.co",
+	environment: process.env.DRAFTBASE_ENVIRONMENT || "production",
 	cacheTtlMs: 60_000,
 });
 
