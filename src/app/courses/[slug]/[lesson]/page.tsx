@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MDXContent } from "@draftbase/renderer";
 import { CompleteButton, Curriculum, ProgressBar } from "@/components/progress";
 import { getCourseTree, getCourseTrees, snippet } from "@/lib/draftbase";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // One static page per lesson of every course.
 export async function generateStaticParams() {
@@ -35,6 +36,12 @@ export async function generateMetadata({
 	return {
 		title: found?.lesson.fields.title,
 		description: found && snippet(found.lesson.fields.body ?? ""),
+		alternates: { canonical: `/courses/${slug}/${lesson}/` },
+		openGraph: {
+			type: "article",
+			title: found?.lesson.fields.title,
+			description: found && snippet(found.lesson.fields.body ?? ""),
+		},
 	};
 }
 
@@ -48,9 +55,54 @@ export default async function LessonPage({
 	if (!found) notFound();
 
 	const { tree, lesson, previous, next } = found;
+	const canonical = `${SITE_URL}/courses/${slug}/${lessonSlug}/`;
+
+	const schema = [
+		{
+			"@context": "https://schema.org",
+			"@type": "LearningResource",
+			name: lesson.fields.title,
+			description: snippet(lesson.fields.body ?? ""),
+			url: canonical,
+			timeRequired: lesson.fields.durationMinutes
+				? `PT${lesson.fields.durationMinutes}M`
+				: undefined,
+			isPartOf: {
+				"@type": "Course",
+				name: tree.course.fields.title,
+				url: `${SITE_URL}/courses/${slug}/`,
+			},
+			provider: { "@type": "Organization", name: SITE_NAME },
+			isAccessibleForFree: true,
+		},
+		{
+			"@context": "https://schema.org",
+			"@type": "BreadcrumbList",
+			itemListElement: [
+				{ "@type": "ListItem", position: 1, name: "Courses", item: `${SITE_URL}/` },
+				{
+					"@type": "ListItem",
+					position: 2,
+					name: tree.course.fields.title,
+					item: `${SITE_URL}/courses/${slug}/`,
+				},
+				{
+					"@type": "ListItem",
+					position: 3,
+					name: lesson.fields.title,
+					item: canonical,
+				},
+			],
+		},
+	];
 
 	return (
 		<div className="layout">
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+			/>
+
 			<aside>
 				<ProgressBar course={slug} total={tree.lessons.length} />
 				<Curriculum
@@ -66,7 +118,7 @@ export default async function LessonPage({
 				/>
 			</aside>
 
-			<main>
+			<article>
 				<p className="muted" style={{ margin: 0 }}>
 					<Link href={`/courses/${slug}`}>{tree.course.fields.title}</Link>
 				</p>
@@ -81,7 +133,9 @@ export default async function LessonPage({
 					</p>
 				)}
 
-				<MDXContent source={lesson.fields.body ?? ""} />
+				<div className="db-content">
+					<MDXContent source={lesson.fields.body ?? ""} />
+				</div>
 
 				<div style={{ marginTop: "2rem" }}>
 					<CompleteButton course={slug} lesson={lessonSlug} />
@@ -103,7 +157,7 @@ export default async function LessonPage({
 						<span />
 					)}
 				</nav>
-			</main>
+			</article>
 		</div>
 	);
 }

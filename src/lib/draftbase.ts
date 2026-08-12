@@ -42,6 +42,18 @@ export interface Media {
 	altText?: string;
 }
 
+export interface Faq {
+	question: string;
+	answer: string;
+	order?: number;
+}
+
+/** Home-page FAQ, sorted by the entry's `order` field. Also feeds FAQPage JSON-LD. */
+export async function getFaqs(): Promise<DbEntry<Faq>[]> {
+	const faqs = await getAll<Faq>("faq");
+	return faqs.sort((a, b) => (a.fields.order ?? 0) - (b.fields.order ?? 0));
+}
+
 export interface Course {
 	title: string;
 	slug: string;

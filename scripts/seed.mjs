@@ -20,16 +20,26 @@ if (!API_KEY) {
 }
 
 async function api(path, { method = "GET", body } = {}) {
-	const res = await fetch(new URL(path, BASE_URL), {
-		method,
-		headers: {
-			Authorization: `Bearer ${API_KEY}`,
-			...(body ? { "Content-Type": "application/json" } : {}),
-		},
-		body: body ? JSON.stringify(body) : undefined,
-	});
-	if (!res.ok) throw new Error(`${method} ${path} -> ${res.status} ${await res.text()}`);
-	return res.status === 204 ? null : res.json();
+	// A full seed is a burst of writes, so the API's rate limiter is expected rather than
+	// exceptional — back off and retry instead of leaving the org half-seeded.
+	for (let attempt = 0; ; attempt++) {
+		const res = await fetch(new URL(path, BASE_URL), {
+			method,
+			headers: {
+				Authorization: `Bearer ${API_KEY}`,
+				...(body ? { "Content-Type": "application/json" } : {}),
+			},
+			body: body ? JSON.stringify(body) : undefined,
+		});
+		if (res.status === 429 && attempt < 5) {
+			const seconds = Number(res.headers.get("retry-after")) || 2 ** attempt;
+			console.log(`rate limited, retrying in ${seconds}s`);
+			await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+			continue;
+		}
+		if (!res.ok) throw new Error(`${method} ${path} -> ${res.status} ${await res.text()}`);
+		return res.status === 204 ? null : res.json();
+	}
 }
 
 /** A template's key is derived from its name ("Blog Post" -> "blogPost"), and is what
@@ -75,6 +85,14 @@ async function ensureEntry(templateId, titleField, fields, tags = []) {
 	const list = await api(`/entries?envId=${ENV_ID}&templateId=${templateId}&limit=100`);
 	const match = list.items.find((e) => e.fields[titleField] === fields[titleField]);
 	if (match) {
+		// Re-publish rather than skip: a previous run interrupted between create and publish
+		// leaves a draft the site cannot see.
+		if (match.status !== "published") {
+			await api(`/entries/${match._id}/status`, {
+				method: "PATCH",
+				body: { status: "published" },
+			});
+		}
 		console.log(`entry "${fields[titleField]}" already exists`);
 		return match._id;
 	}
@@ -135,6 +153,41 @@ const templates = [
 			{ key: "module", label: "Module", type: "reference", referenceTemplateId: "module" },
 		],
 	},
+	{
+		// Rendered on the home page and emitted as FAQPage JSON-LD, so the answers an
+		// assistant quotes are edited in the CMS rather than hardcoded in the template.
+		key: "faq",
+		name: "Faq",
+		titleField: "question",
+		fields: [
+			{ key: "question", label: "Question", type: "text", required: true },
+			{ key: "answer", label: "Answer", type: "text", multiline: true, required: true },
+			{ key: "order", label: "Order", type: "number" },
+		],
+	},
+];
+
+const faqs = [
+	{
+		question: "Do I need prior experience?",
+		answer: "No. Each course starts from first principles and builds up to the tradeoffs you hit in production.",
+		order: 1,
+	},
+	{
+		question: "How long does a course take?",
+		answer: "A few hours of reading across a dozen short lessons, plus the worked examples if you follow along.",
+		order: 2,
+	},
+	{
+		question: "Is my progress saved?",
+		answer: "Progress is stored in your browser's local storage. There are no accounts, so it does not follow you to another device.",
+		order: 3,
+	},
+	{
+		question: "Can I access the material after I finish?",
+		answer: "Yes. Every lesson is a public static page — nothing is gated or expires.",
+		order: 4,
+	},
 ];
 
 const courses = [
@@ -149,7 +202,7 @@ const courses = [
 		description: `Four short lessons on the part of a CMS that actually matters: the shape
 of the content. Everything else — the editor, the API, the framework — is replaceable.
 
-You will need a Draftbase org and about an hour.`,
+You will need a headless CMS to follow along, and about an hour.`,
 		modules: [
 			{
 				title: "Modelling content",
@@ -381,6 +434,8 @@ async function main() {
 			}
 		}
 	}
+
+	for (const faq of faqs) await ensureEntry("faq", "question", faq);
 
 	console.log("\nSeed complete. Run `npm run dev`.");
 }

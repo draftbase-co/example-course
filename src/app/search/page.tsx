@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { getCourseTrees, snippet } from "@/lib/draftbase";
 import { SearchClient, type SearchDoc } from "./SearchClient";
+
+// A search box with no query has nothing worth indexing, and every query would be a
+// near-duplicate of the pages it points at.
+export const metadata: Metadata = {
+	title: "Search",
+	robots: { index: false, follow: true },
+};
 
 /**
  * The index is built here, on the server, and shipped with the page. No API key reaches the
@@ -22,10 +30,10 @@ export default async function SearchPage() {
 	);
 
 	return (
-		<>
-			<h1>Search</h1>
+		<section className="faq" style={{ maxWidth: "820px" }}>
+			<h1 style={{ fontSize: "var(--text-3xl)", margin: "0 0 8px" }}>Search</h1>
 			<p className="muted">{docs.length} lessons indexed at build time.</p>
 			<SearchClient docs={docs} />
-		</>
+		</section>
 	);
 }
