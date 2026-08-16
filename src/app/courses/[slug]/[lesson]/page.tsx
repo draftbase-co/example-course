@@ -70,7 +70,17 @@ export default async function LessonPage({
 			isPartOf: {
 				"@type": "Course",
 				name: tree.course.fields.title,
+				description: tree.course.fields.summary,
 				url: `${SITE_URL}/courses/${slug}/`,
+				provider: { "@type": "Organization", name: SITE_NAME, sameAs: SITE_URL },
+				isAccessibleForFree: true,
+				hasCourseInstance: {
+					"@type": "CourseInstance",
+					courseMode: "online",
+					instructor: tree.course.fields.instructor
+						? { "@type": "Person", name: tree.course.fields.instructor }
+						: undefined,
+				},
 			},
 			provider: { "@type": "Organization", name: SITE_NAME },
 			isAccessibleForFree: true,
