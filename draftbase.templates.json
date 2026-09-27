@@ -1,0 +1,166 @@
+[
+	{
+		"key": "course",
+		"name": "Course",
+		"titleField": "title",
+		"fields": [
+			{
+				"key": "title",
+				"label": "Title",
+				"type": "text",
+				"required": true
+			},
+			{
+				"key": "slug",
+				"label": "Slug",
+				"type": "text",
+				"required": true,
+				"isSlug": true
+			},
+			{
+				"key": "summary",
+				"label": "Summary",
+				"type": "text",
+				"multiline": true,
+				"maxLength": 220
+			},
+			{
+				"key": "description",
+				"label": "Description",
+				"type": "richText"
+			},
+			{
+				"key": "cover",
+				"label": "Cover image",
+				"type": "media"
+			},
+			{
+				"key": "level",
+				"label": "Level",
+				"type": "text",
+				"options": [
+					"Beginner",
+					"Intermediate",
+					"Advanced"
+				]
+			},
+			{
+				"key": "instructor",
+				"label": "Instructor",
+				"type": "text"
+			}
+		]
+	},
+	{
+		"key": "module",
+		"name": "Module",
+		"titleField": "title",
+		"fields": [
+			{
+				"key": "title",
+				"label": "Title",
+				"type": "text",
+				"required": true
+			},
+			{
+				"key": "slug",
+				"label": "Slug",
+				"type": "text",
+				"required": true,
+				"isSlug": true
+			},
+			{
+				"key": "order",
+				"label": "Order",
+				"type": "number",
+				"required": true
+			},
+			{
+				"key": "summary",
+				"label": "Summary",
+				"type": "text",
+				"multiline": true
+			},
+			{
+				"key": "course",
+				"label": "Course",
+				"type": "reference",
+				"referenceTemplateId": "course"
+			}
+		]
+	},
+	{
+		"key": "lesson",
+		"name": "Lesson",
+		"titleField": "title",
+		"fields": [
+			{
+				"key": "title",
+				"label": "Title",
+				"type": "text",
+				"required": true
+			},
+			{
+				"key": "slug",
+				"label": "Slug",
+				"type": "text",
+				"required": true,
+				"isSlug": true
+			},
+			{
+				"key": "order",
+				"label": "Order",
+				"type": "number",
+				"required": true
+			},
+			{
+				"key": "durationMinutes",
+				"label": "Duration (minutes)",
+				"type": "number",
+				"min": 1
+			},
+			{
+				"key": "videoUrl",
+				"label": "Video URL",
+				"type": "text"
+			},
+			{
+				"key": "body",
+				"label": "Body",
+				"type": "richText",
+				"required": true
+			},
+			{
+				"key": "module",
+				"label": "Module",
+				"type": "reference",
+				"referenceTemplateId": "module"
+			}
+		]
+	},
+	{
+		"key": "faq",
+		"name": "Faq",
+		"titleField": "question",
+		"fields": [
+			{
+				"key": "question",
+				"label": "Question",
+				"type": "text",
+				"required": true
+			},
+			{
+				"key": "answer",
+				"label": "Answer",
+				"type": "text",
+				"multiline": true,
+				"required": true
+			},
+			{
+				"key": "order",
+				"label": "Order",
+				"type": "number"
+			}
+		]
+	}
+]
